@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buma VPN - Modern Premium Proxy</title>
+    <style>
+        :root {
+            --bg-color: #080808;
+            --surface: rgba(20, 20, 20, 0.5);
+            --surface-solid: #111111;
+            --text-color: #ffffff;
+            --text-muted: #8e8e93;
+            --gold: #e5c158;
+            --gold-glow: rgba(229, 193, 88, 0.25);
+            --border-glass: rgba(229, 193, 88, 0.15);
+            --glass-blur: blur(25px);
+        }
+
+        [data-theme="light"] {
+            --bg-color: #f7f7f9;
+            --surface: rgba(255, 255, 255, 0.5);
+            --surface-solid: #ffffff;
+            --text-color: #1c1c1e;
+            --text-muted: #8e8e93;
+            --gold: #c59b27;
+            --gold-glow: rgba(197, 155, 39, 0.15);
+            --border-glass: rgba(197, 155, 39, 0.2);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+        body { background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; min-height: 100vh; overflow-x: hidden; }
+        
+        .phone-container { width: 100%; max-width: 420px; height: 100vh; background-color: var(--bg-color); border: 1px solid var(--border-glass); position: relative; display: flex; flex-direction: column; overflow-y: auto; }
+        
+        .kanote-bg { position: absolute; width: 100%; height: 100%; opacity: 0.02; pointer-events: none; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><path d="M50 0 Q75 25 50 50 Q25 75 50 100" stroke="%23e5c158" fill="none" stroke-width="1"/></svg>'); [data-theme="light"] & { opacity: 0.04; } }
+
+        .app-header { height: 70px; background: transparent; display: flex; align-items: center; justify-content: center; position: relative; z-index: 10; padding: 0 20px; }
+        .app-title { font-size: 20px; font-weight: 800; color: var(--text-color); letter-spacing: 3px; display: flex; align-items: center; gap: 6px; }
+        .app-title span.dot { width: 6px; height: 6px; background: var(--gold); border-radius: 50%; box-shadow: 0 0 8px var(--gold); }
+
+        .page-content { flex: 1; padding: 15px 20px; z-index: 5; display: none; }
+        .page-content.active { display: flex; flex-direction: column; animation: fadeIn 0.3s ease; }
+
+        .liquid-glass { background: var(--surface); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--border-glass); border-radius: 20px; padding: 20px; margin-bottom: 16px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15); }
+
+        .main-hero { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; margin-bottom: 20px; }
+        
+        .status-pill { padding: 6px 16px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; border: 1px solid var(--border-glass); color: var(--text-muted); text-transform: uppercase; margin-bottom: 40px; }
+        .status-pill.active { border-color: #34c759; color: #34c759; background: rgba(52, 199, 89, 0.05); text-shadow: 0 0 10px rgba(52,199,89,0.2); }
+        
+        .thanakha-btn-wrapper { position: relative; display: flex; justify-content: center; align-items: center; width: 200px; height: 200px; }
+        .thanakha-btn { width: 150px; height: 150px; border-radius: 50%; background: var(--surface-solid); border: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 2; position: relative; }
+        .thanakha-btn::after { content: ''; position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 1px solid var(--gold); opacity: 0.3; transform: scale(1.08); }
+        .thanakha-btn:active { transform: scale(0.96); }
+        
+        .power-line { width: 40px; height: 40px; border: 3px solid var(--text-muted); border-radius: 50%; border-top-color: transparent; position: relative; margin-bottom: 12px; }
+        .power-line::before { content: ''; position: absolute; top: -6px; left: 50%; transform: translateX(-50%); width: 3px; height: 15px; background: var(--text-muted); border-radius: 2px; }
+        
+        .thanakha-btn.active { border-color: var(--gold); box-shadow: 0 0 40px var(--gold-glow); }
+        .thanakha-btn.active .power-line { border-color: var(--gold); border-top-color: transparent; filter: drop-shadow(0 0 8px var(--gold)); }
+        .thanakha-btn.active .power-line::before { background: var(--gold); }
+        .thanakha-btn.active .btn-label { color: var(--gold); }
+        
+        .btn-label { font-size: 11px; font-weight: 800; color: var(--text-muted); letter-spacing: 2px; }
+        .stone-rim { position: absolute; width: 190px; height: 190px; border-radius: 50%; border: 1px solid var(--border-glass); opacity: 0.5; }
+        .stone-rim.running { animation: pulse 2s infinite ease-in-out; border-color: var(--gold); opacity: 0.8; }
+
+        .input-group { margin-bottom: 16px; }
+        .input-label { font-size: 11px; font-weight: 700; color: var(--gold); margin-bottom: 8px; display: block; letter-spacing: 1px; text-transform: uppercase; opacity: 0.9; }
+        .selector-flex { display: flex; gap: 8px; margin-bottom: 16px; background: rgba(0,0,0,0.2); padding: 4px; border-radius: 12px; [data-theme="light"] & { background: rgba(0,0,0,0.03); } }
+        .selector-btn { flex: 1; padding: 10px; background: transparent; border: none; border-radius: 9px; color: var(--text-muted); font-weight: 700; font-size: 13px; cursor: pointer; }
+        .selector-btn.active { background: var(--surface-solid); color: var(--gold); box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+        
+        .key-input { width: 100%; padding: 12px 14px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-glass); border-radius: 12px; color: var(--text-color); font-size: 13px; outline: none; [data-theme="light"] & { background: #fff; } }
+        .key-input:focus { border-color: var(--gold); }
+
+        .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.03); [data-theme="light"] & { border-bottom-color: rgba(0,0,0,0.05); } }
+        .setting-row:last-child { border-bottom: none; }
+        .setting-info .title { font-size: 14px; font-weight: 600; }
+        .setting-info .sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+        
+        .toggle-select { padding: 6px 10px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-glass); border-radius: 8px; color: var(--text-color); font-weight: 600; font-size: 12px; outline: none; [data-theme="light"] & { background: #fff; } }
+        
+        .social-link { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-glass); border-radius: 14px; text-decoration: none; color: var(--text-color); margin-bottom: 10px; font-size: 14px; font-weight: 600; [data-theme="light"] & { background: rgba(0,0,0,0.01); } }
+        .social-link:hover { border-color: var(--gold); background: rgba(229,193,88,0.03); }
+        .social-link span.arrow { color: var(--gold); font-weight: bold; }
+
+        .footer-nav { height: 65px; background: var(--surface-solid); border-top: 1px solid var(--border-glass); display: flex; z-index: 10; padding-bottom: env(safe-area-inset-bottom); }
+        .nav-item { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--text-muted); text-decoration: none; font-size: 10px; font-weight: 700; cursor: pointer; letter-spacing: 0.5px; text-transform: uppercase; }
+        .nav-item.active { color: var(--gold); }
+        .nav-item .nav-icon { font-size: 18px; margin-bottom: 3px; opacity: 0.6; }
+        .nav-item.active .nav-icon { opacity: 1; filter: drop-shadow(0 0 5px var(--gold-glow)); }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.1); opacity: 0.1; } 100% { transform: scale(1); opacity: 0.5; } }
+    </style>
+</head>
+<body data-theme="dark">
+
+<div class="phone-container">
+    <div class="kanote-bg"></div>
+    
+    <!-- App Header -->
+    <header class="app-header">
+        <div class="app-title">
+            <span id="lblAppTitle">BUMA VPN</span><span class="dot"></span>
+        </div>
+    </header>
+
+    <!-- HOME PAGE -->
+    <div id="pageHome" class="page-content active">
+        <div class="main-hero">
+            <div class="status-pill" id="vpnStatus">DISCONNECTED</div>
+            
+            <div class="thanakha-btn-wrapper">
+                <div class="stone-rim" id="stoneRim"></div>
+                <div class="thanakha-btn" id="thanakhaBtn" onclick="handleVpnConnect()">
+                    <div class="power-line"></div>
+                    <div class="btn-label" id="lblConnectBtn">START</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="liquid-glass">
+            <label class="input-label" id="lblProtoTitle">PROTOCOL</label>
+            <div class="selector-flex">
+                <button class="selector-btn active" onclick="switchProto('vless', this)">VLESS</button>
+                <button class="selector-btn" onclick="switchProto('ss', this)">SHADOWSOCKS</button>
+            </div>
+
+            <div class="input-group">
+                <label class="input-label" id="lblInputTitle">ACCESS KEY</label>
+                <input type="text" id="configKeyInput" class="key-input" placeholder="vless:// or ss://">
+            </div>
+        </div>
+    </div>
+
+    <!-- SETTINGS PAGE -->
+    <div id="pageSettings" class="page-content">
+        <div class="liquid-glass">
+            <div class="setting-row">
+                <div class="setting-info">
+                    <div class="title" id="lblSettingTheme">Appearance</div>
+                    <div class="sub" id="lblSettingThemeSub">Choose dark or light theme</div>
+                </div>
+                <select class="toggle-select" onchange="changeTheme(this.value)">
+                    <option value="dark" selected>Dark</option>
+                    <option value="light">Light</option>
+                </select>
+            </div>
+
+            <div class="setting-row">
+                <div class="setting-info">
+                    <div class="title" id="lblSettingLang">Language</div>
+                    <div class="sub" id="lblSettingLangSub">Change app language</div>
+                </div>
+                <select class="toggle-select" onchange="changeLanguage(this.value)">
+                    <option value="my">မြန်မာ</option>
+                    <option value="en" selected>English</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="liquid-glass">
+            <label class="input-label" id="lblContactTitle">SUPPORT</label>
+            <a href="mailto:support@bumavpn.com" class="social-link">
+                <div style="display:flex; align-items:center; gap:10px;"><span>📧</span> Email Support</div>
+                <span class="arrow">→</span>
+            </a>
+            <a href="https://t.me/yourchannel" target="_blank" class="social-link">
+                <div style="display:flex; align-items:center; gap:10px;"><span>✈️</span> Telegram Channel</div>
+                <span class="arrow">→</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Footer Navigation -->
+    <nav class="footer-nav">
+        <div class="nav-item active" id="tabHome" onclick="switchPage('home')">
+            <span class="nav-icon">⚡</span>
+            <span id="lblNavHome">PROXY</span>
+        </div>
+        <div class="nav-item" id="tabSettings" onclick="switchPage('settings')">
+            <span class="nav-icon">⚙️</span>
+            <span id="lblNavSettings">CONFIG</span>
+        </div>
+    </nav>
+</div>
+
+<script>
+    let currentProtocol = 'vless';
+    let isConnected = false;
+    let currentLang = 'en'; // Default set to English to match initial state
+
+    const langData = {
+        my: {
+            appTitle: "BUMA VPN", home: "PROXY", setting: "CONFIG",
+            statusDis: "ချိတ်ဆက်မထားပါ", statusCon: "ချိတ်ဆက်ထားသည်",
+            connect: "စတင်မည်", disconnect: "ရပ်တန့်မည်", proto: "ပရိုတိုကော",
+            inputTitle: "အသုံးပြုမည့်ကုဒ် (KEY)", themeTitle: "ဆော့ဖ်ဝဲလ် အသွင်အပြင်",
+            themeSub: "အလင်း သို့မဟုတ် အမှောင် ရွေးချယ်ပါ", langTitle: "ဘာသာစကား",
+            langSub: "ဆော့ဖ်ဝဲလ် ဘာသာစကား ပြောင်းရန်", contact: "ဆက်သွယ်ရန်"
+        },
+        en: {
+            appTitle: "BUMA VPN", home: "PROXY", setting: "CONFIG",
+            statusDis: "DISCONNECTED", statusCon: "CONNECTED",
+            connect: "START", disconnect: "STOP", proto: "PROTOCOL",
+            inputTitle: "ACCESS KEY", themeTitle: "Appearance",
+            themeSub: "Choose dark or light theme", langTitle: "Language",
+            langSub: "Change app language", contact: "SUPPORT"
+        }
+    };
+
+    function switchPage(page) {
+        document.getElementById('pageHome').classList.remove('active');
+        document.getElementById('pageSettings').classList.remove('active');
+        document.getElementById('tabHome').classList.remove('active');
+        document.getElementById('tabSettings').classList.remove('active');
+
+        if(page === 'home') {
+            document.getElementById('pageHome').classList.add('active');
+            document.getElementById('tabHome').classList.add('active');
+        } else {
+            document.getElementById('pageSettings').classList.add('active');
+            document.getElementById('tabSettings').classList.add('active');
+        }
+    }
+
+    function switchProto(proto, btn) {
+        currentProtocol = proto;
+        document.querySelectorAll('.selector-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+
+    // Appearance Type (Light/Dark)
+    function changeTheme(theme) {
+        document.body.setAttribute('data-theme', theme);
+    }
+
+    // Language Switcher Logic (Fixed missing element IDs)
+    function changeLanguage(lang) {
+        currentLang = lang;
+        const d = langData[lang];
+        
+        document.getElementById('lblAppTitle').innerText = d.appTitle;
+        document.getElementById('lblNavHome').innerText = d.home;
+        document.getElementById('lblNavSettings').innerText = d.setting;
+        document.getElementById('lblProtoTitle').innerText = d.proto;
+        document.getElementById('lblInputTitle').innerText = d.inputTitle;
+        document.getElementById('lblSettingTheme').innerText = d.themeTitle;
+        document.getElementById('lblSettingThemeSub').innerText = d.themeSub;
+        document.getElementById('lblSettingLang').innerText = d.langTitle;
+        document.getElementById('lblSettingLangSub').innerText = d.langSub;
+        document.getElementById('lblContactTitle').innerText = d.contact;
+        
+        const statusBox = document.getElementById('vpnStatus');
+        const btnLabel = document.getElementById('lblConnectBtn');
+        if(isConnected) {
+            statusBox.innerText = d.statusCon;
+            btnLabel.innerText = d.disconnect;
+        } else {
+            statusBox.innerText = d.statusDis;
+            btnLabel.innerText = d.connect;
+        }
+    }
+
+    function handleVpnConnect() {
+        const key = document.getElementById('configKeyInput').value.trim();
+        const statusBox = document.getElementById('vpnStatus');
+        const btnLabel = document.getElementById('lblConnectBtn');
+        const thanakhaBtn = document.getElementById('thanakhaBtn');
+        const stoneRim = document.getElementById('stoneRim');
+        const d = langData[currentLang];
+
+        if(!key) {
+            alert(currentLang === 'my' ? "Access Key အရင်ထည့်ပေးပါဗျာ။" : "Please paste an access key first!");
+            return;
+        }
+
+        isConnected = !isConnected;
+
+        if(isConnected) {
+            statusBox.innerText = d.statusCon;
+            statusBox.classList.add('active');
+            btnLabel.innerText = d.disconnect;
+            thanakhaBtn.classList.add('active');
+            stoneRim.classList.add('running');
+            
+            setTimeout(() => {
+                window.location.href = "hiddify://import/" + encodeURIComponent(key);
+            }, 500);
+        } else {
+            statusBox.innerText = d.statusDis;
+            statusBox.classList.remove('active');
+            btnLabel.innerText = d.connect;
+            thanakhaBtn.classList.remove('active');
+            stoneRim.classList.remove('running');
+        }
+    }
+</script>
+</body>
+</html>
